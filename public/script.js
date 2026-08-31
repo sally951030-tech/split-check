@@ -41,6 +41,10 @@ async function removeExpense(expenseId) {
   await fetch(`${API_BASE}/expenses/${expenseId}`, { method: "DELETE" });
 }
 
+async function removeAllExpenses(expenses) {
+  await Promise.all(expenses.map((e) => removeExpense(e.id)));
+}
+
 function calculateBalances(participants, expenses) {
   const balances = {};
   participants.forEach((p) => (balances[p.id] = 0));
@@ -290,6 +294,14 @@ async function renderAll() {
   renderSettlements(participants, settlements);
 
   document.getElementById("copy-text-btn").onclick = () => copyBalanceText(participants, balances, settlements);
+
+  const clearBtn = document.getElementById("clear-expenses-btn");
+  clearBtn.disabled = expenses.length === 0;
+  clearBtn.onclick = async () => {
+    if (!confirm("確定要刪除全部花費紀錄嗎？這個動作無法復原。")) return;
+    await removeAllExpenses(expenses);
+    renderAll();
+  };
 }
 
 function initApp() {

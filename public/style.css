@@ -40,6 +40,25 @@ body {
 .card h2 { margin-top: 0; font-size: 17px; }
 .card h3 { font-size: 14px; color: var(--muted); margin: 16px 0 8px; }
 
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.clear-btn {
+  border: 1px solid var(--border);
+  background: none;
+  color: var(--owe-color);
+  font-size: 13px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.clear-btn:hover:not(:disabled) { background: #fbeceb; }
+.clear-btn:disabled { color: var(--muted); border-color: var(--border); cursor: not-allowed; }
+
 .card form {
   display: flex;
   flex-direction: column;
