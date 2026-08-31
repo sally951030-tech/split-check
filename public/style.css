@@ -57,6 +57,12 @@ body {
 }
 
 .clear-btn:hover:not(:disabled) { background: #fbeceb; }
+
+.clear-btn.confirming {
+  background: var(--owe-color);
+  border-color: var(--owe-color);
+  color: white;
+}
 .clear-btn:disabled { color: var(--muted); border-color: var(--border); cursor: not-allowed; }
 
 .card form {

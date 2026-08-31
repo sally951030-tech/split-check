@@ -297,8 +297,20 @@ async function renderAll() {
 
   const clearBtn = document.getElementById("clear-expenses-btn");
   clearBtn.disabled = expenses.length === 0;
+  clearBtn.textContent = "刪除全部花費紀錄";
+  clearBtn.classList.remove("confirming");
   clearBtn.onclick = async () => {
-    if (!confirm("確定要刪除全部花費紀錄嗎？這個動作無法復原。")) return;
+    if (!clearBtn.classList.contains("confirming")) {
+      clearBtn.classList.add("confirming");
+      clearBtn.textContent = "再按一次確認刪除";
+      clearTimeout(clearBtn._resetTimer);
+      clearBtn._resetTimer = setTimeout(() => {
+        clearBtn.classList.remove("confirming");
+        clearBtn.textContent = "刪除全部花費紀錄";
+      }, 3000);
+      return;
+    }
+    clearTimeout(clearBtn._resetTimer);
     await removeAllExpenses(expenses);
     renderAll();
   };
