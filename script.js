@@ -1,48 +1,62 @@
-const API_BASE = "/api";
+const STORAGE_KEY_PARTICIPANTS = "sc_participants";
+const STORAGE_KEY_EXPENSES = "sc_expenses";
 
-async function loadParticipants() {
-  const res = await fetch(`${API_BASE}/participants`);
-  return res.json();
+function generateId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
 
-async function addParticipant(name) {
-  await fetch(`${API_BASE}/participants`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name }),
-  });
+function loadParticipants() {
+  const raw = localStorage.getItem(STORAGE_KEY_PARTICIPANTS);
+  return raw ? JSON.parse(raw) : [];
 }
 
-async function removeParticipant(participantId, expenses) {
-  const inUse = expenses.some(
+function saveParticipants(participants) {
+  localStorage.setItem(STORAGE_KEY_PARTICIPANTS, JSON.stringify(participants));
+}
+
+function loadExpenses() {
+  const raw = localStorage.getItem(STORAGE_KEY_EXPENSES);
+  return raw ? JSON.parse(raw) : [];
+}
+
+function saveExpenses(expenses) {
+  localStorage.setItem(STORAGE_KEY_EXPENSES, JSON.stringify(expenses));
+}
+
+function addParticipant(name) {
+  const participants = loadParticipants();
+  participants.push({ id: generateId(), name });
+  saveParticipants(participants);
+}
+
+function isParticipantInUse(participantId, expenses) {
+  return expenses.some(
     (e) => e.payerId === participantId || e.splitIds.includes(participantId)
   );
-  if (inUse) {
+}
+
+function removeParticipant(participantId, expenses) {
+  if (isParticipantInUse(participantId, expenses)) {
     alert("這位成員已經出現在花費紀錄裡，要先刪除相關花費紀錄才能移除他。");
     return;
   }
-  await fetch(`${API_BASE}/participants/${participantId}`, { method: "DELETE" });
+  const participants = loadParticipants().filter((p) => p.id !== participantId);
+  saveParticipants(participants);
 }
 
-async function loadExpenses() {
-  const res = await fetch(`${API_BASE}/expenses`);
-  return res.json();
+function addExpense({ desc, amount, payerId, splitIds }) {
+  const expenses = loadExpenses();
+  expenses.push({ id: generateId(), desc, amount, payerId, splitIds });
+  saveExpenses(expenses);
 }
 
-async function addExpense({ desc, amount, payerId, splitIds }) {
-  await fetch(`${API_BASE}/expenses`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ desc, amount, payerId, splitIds }),
-  });
+function removeExpense(expenseId) {
+  const expenses = loadExpenses().filter((e) => e.id !== expenseId);
+  saveExpenses(expenses);
 }
 
-async function removeExpense(expenseId) {
-  await fetch(`${API_BASE}/expenses/${expenseId}`, { method: "DELETE" });
-}
-
-async function removeAllExpenses(expenses) {
-  await Promise.all(expenses.map((e) => removeExpense(e.id)));
+function removeAllExpenses() {
+  saveExpenses([]);
 }
 
 function calculateBalances(participants, expenses) {
@@ -109,8 +123,8 @@ function renderParticipants(participants, expenses) {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.textContent = "×";
-    btn.addEventListener("click", async () => {
-      await removeParticipant(p.id, expenses);
+    btn.addEventListener("click", () => {
+      removeParticipant(p.id, expenses);
       renderAll();
     });
     li.appendChild(btn);
@@ -176,8 +190,8 @@ function renderExpenses(participants, expenses) {
     const btn = document.createElement("button");
     btn.className = "delete-btn";
     btn.textContent = "刪除";
-    btn.addEventListener("click", async () => {
-      await removeExpense(e.id);
+    btn.addEventListener("click", () => {
+      removeExpense(e.id);
       renderAll();
     });
     li.appendChild(btn);
@@ -280,8 +294,9 @@ async function copyBalanceText(participants, balances, settlements) {
   }, 3000);
 }
 
-async function renderAll() {
-  const [participants, expenses] = await Promise.all([loadParticipants(), loadExpenses()]);
+function renderAll() {
+  const participants = loadParticipants();
+  const expenses = loadExpenses();
 
   renderParticipants(participants, expenses);
   renderPayerSelect(participants);
@@ -299,7 +314,7 @@ async function renderAll() {
   clearBtn.disabled = expenses.length === 0;
   clearBtn.textContent = "刪除全部花費紀錄";
   clearBtn.classList.remove("confirming");
-  clearBtn.onclick = async () => {
+  clearBtn.onclick = () => {
     if (!clearBtn.classList.contains("confirming")) {
       clearBtn.classList.add("confirming");
       clearBtn.textContent = "再按一次確認刪除";
@@ -311,23 +326,23 @@ async function renderAll() {
       return;
     }
     clearTimeout(clearBtn._resetTimer);
-    await removeAllExpenses(expenses);
+    removeAllExpenses();
     renderAll();
   };
 }
 
 function initApp() {
-  document.getElementById("participant-form").addEventListener("submit", async (event) => {
+  document.getElementById("participant-form").addEventListener("submit", (event) => {
     event.preventDefault();
     const input = document.getElementById("participant-name-input");
     const name = input.value.trim();
     if (!name) return;
-    await addParticipant(name);
+    addParticipant(name);
     input.value = "";
     renderAll();
   });
 
-  document.getElementById("expense-form").addEventListener("submit", async (event) => {
+  document.getElementById("expense-form").addEventListener("submit", (event) => {
     event.preventDefault();
 
     const descInput = document.getElementById("expense-desc-input");
@@ -344,7 +359,7 @@ function initApp() {
       return;
     }
 
-    await addExpense({
+    addExpense({
       desc: descInput.value.trim(),
       amount: Number(amountInput.value),
       payerId: payerSelect.value,
