@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>split-check 分帳工具</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="app">
+  <h1>split-check 分帳工具</h1>
+  <p class="subtitle">資料存在 Notion，重新整理不會消失</p>
+
+  <section class="card">
+    <h2>成員</h2>
+    <form id="participant-form" class="inline-form">
+      <input type="text" id="participant-name-input" placeholder="輸入成員名字" required />
+      <button type="submit">新增成員</button>
+    </form>
+    <ul id="participant-list" class="tag-list"></ul>
+  </section>
+
+  <section class="card">
+    <h2>新增花費</h2>
+    <form id="expense-form" class="expense-form">
+      <input type="text" id="expense-desc-input" placeholder="項目（例如：晚餐）" required />
+      <input type="number" id="expense-amount-input" placeholder="金額" min="0" step="1" required />
+      <label>
+        誰付的
+        <select id="expense-payer-select" required></select>
+      </label>
+      <div class="split-field">
+        <span>由誰分攤</span>
+        <div id="expense-split-checkboxes" class="checkbox-group"></div>
+      </div>
+      <button type="submit">新增花費</button>
+    </form>
+  </section>
+
+  <section class="card">
+    <h2>花費紀錄</h2>
+    <ul id="expense-list" class="expense-list"></ul>
+  </section>
+
+  <section class="card">
+    <h2>結算結果</h2>
+    <div id="balance-summary" class="balance-summary"></div>
+    <h3>建議轉帳</h3>
+    <ul id="settlement-list" class="settlement-list"></ul>
+    <div class="share-actions">
+      <button type="button" id="copy-text-btn" disabled>複製金額文字（給 IG）</button>
+    </div>
+    <p id="copy-feedback" class="copy-feedback"></p>
+  </section>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
