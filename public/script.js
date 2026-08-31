@@ -244,8 +244,24 @@ function buildBalanceText(participants, balances) {
   return lines.join("\n");
 }
 
-async function copyBalanceText(participants, balances) {
-  const text = buildBalanceText(participants, balances);
+function buildSettlementText(participants, settlements) {
+  const lines = ["💸 建議轉帳"];
+
+  if (settlements.length === 0) {
+    lines.push("帳務已經打平，不需要轉帳");
+  } else {
+    settlements.forEach((s) => {
+      const fromName = findParticipantName(participants, s.fromId);
+      const toName = findParticipantName(participants, s.toId);
+      lines.push(`${fromName} → ${toName}：$${Math.round(s.amount)}`);
+    });
+  }
+
+  return lines.join("\n");
+}
+
+async function copyBalanceText(participants, balances, settlements) {
+  const text = [buildBalanceText(participants, balances), buildSettlementText(participants, settlements)].join("\n\n");
   const feedback = document.getElementById("copy-feedback");
 
   try {
@@ -273,7 +289,7 @@ async function renderAll() {
   renderBalanceSummary(participants, balances);
   renderSettlements(participants, settlements);
 
-  document.getElementById("copy-text-btn").onclick = () => copyBalanceText(participants, balances);
+  document.getElementById("copy-text-btn").onclick = () => copyBalanceText(participants, balances, settlements);
 }
 
 function initApp() {
